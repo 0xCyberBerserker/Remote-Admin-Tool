@@ -191,9 +191,7 @@ void sendFile(SOCKET clientSocket, const char* fileName) {
 
 void executePowerShellCommand(SOCKET clientSocket, const char* command) {
     // Código para ejecutar el comando de PowerShell y enviar la salida al cliente
-    // Aquí puedes usar cualquier método que te permita ejecutar comandos de PowerShell y obtener la salida
     
-    // Ejemplo de código:
     FILE* pipe = _popen(command, "r");
     if (pipe == NULL) {
         printf("Error al ejecutar el comando de PowerShell: %s\n", command);
