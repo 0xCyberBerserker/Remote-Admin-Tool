@@ -11,9 +11,16 @@
 #define MAX_CLIENTS 30
 #define MAX_COMMAND_SIZE 1024
 #define MAX_RESPONSE_SIZE 4096
+#define MAX_BUFFER_SIZE 4096
+#define MAX_FILE_NAME 256
+
 
 void receiveFile(SOCKET clientSocket, const char* filename);
 void sendFile(SOCKET clientSocket, const char* filename);
+
+
+
+
 void handleClientCommand(SOCKET clientSocket, const char* command);
 void executePowerShellCommand(SOCKET clientSocket, const char* command);
 
@@ -36,6 +43,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam) {
     return 0;
 }
 
+
 void handleClientCommand(SOCKET clientSocket, const char* command) {
     char response[MAX_RESPONSE_SIZE] = {0};
 
@@ -48,16 +56,22 @@ void handleClientCommand(SOCKET clientSocket, const char* command) {
         } else {
             strcpy(response, "Error al cambiar el directorio");
         }
-    } else if (strncmp(command, "put ", 4) == 0) {
-        // Comando "put": Enviar archivo al servidor
-        const char* filename = command + 4; // Ignorar el "put " al principio del comando
-        sendFile(clientSocket, filename);
-        strcpy(response, "Archivo enviado correctamente");
-    } else if (strncmp(command, "get ", 4) == 0) {
-        // Comando "get": Descargar archivo del servidor
-        const char* filename = command + 4; // Ignorar el "get " al principio del comando
-        receiveFile(clientSocket, filename);
-        strcpy(response, "Archivo recibido correctamente");
+    } else if (strncmp(command, "put", 3) == 0) {
+        // Recibir el nombre del archivo
+        char fileName[MAX_FILE_NAME];
+        sscanf(command, "put %s", fileName);
+
+        // Llamar a la función para recibir el archivo del cliente
+        receiveFile(clientSocket, fileName);
+        printf("Archivo recibido exitosamente\n");
+    } else if (strncmp(command, "get", 3) == 0) {
+        // Recibir el nombre del archivo
+        char fileName[MAX_FILE_NAME];
+        sscanf(command, "get %s", fileName);
+
+        // Llamar a la función para enviar el archivo al cliente
+        sendFile(clientSocket, fileName);
+        printf("Archivo enviado exitosamente\n");
     } else if (strncmp(command, "exec ", 5) == 0) {
         // Comando "exec": Ejecutar comando de PowerShell
         const char* powerShellCommand = command + 5; // Ignorar el "exec " al principio del comando
@@ -87,17 +101,14 @@ void handleClientCommand(SOCKET clientSocket, const char* command) {
             send(clientSocket, "Error al obtener el directorio actual", strlen("Error al obtener el directorio actual"), 0);
         }
     } else {
-        // Comando desconocido
-        strcpy(response, "Comando desconocido");
+        strcpy(response, "Comando no reconocido");
     }
 
     // Enviar la respuesta al cliente
-    if (send(clientSocket, response, strlen(response), 0) == SOCKET_ERROR) {
-        printf("Error al enviar la respuesta al cliente %d\n", clientSocket);
-    }
+    send(clientSocket, response, strlen(response), 0);
 }
 
-void receiveFile(SOCKET clientSocket, const char* filename) {
+/*void receiveFile(SOCKET clientSocket, const char* filename) {
     FILE* file = fopen(filename, "rb");  // Modo lectura binaria en lugar de escritura binaria
     if (file == NULL) {
         printf("Error al abrir el archivo para lectura: %s\n", filename);
@@ -129,6 +140,51 @@ void sendFile(SOCKET clientSocket, const char* filename) {
             break;
         }
     }
+
+    fclose(file);
+}*/
+
+void receiveFile(SOCKET clientSocket, const char* fileName) {
+    FILE* file = fopen(fileName, "wb");
+    if (file == NULL) {
+        printf("Error al abrir el archivo para escritura\n");
+        return;
+    }
+
+    char buffer[MAX_BUFFER_SIZE];
+    int bytesRead;
+    do {
+        bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+        if (bytesRead < 0) {
+            printf("Error al recibir el archivo del cliente\n");
+            fclose(file);
+            return;
+        }
+        fwrite(buffer, 1, bytesRead, file);
+    } while (bytesRead == sizeof(buffer));
+
+    fclose(file);
+}
+
+void sendFile(SOCKET clientSocket, const char* fileName) {
+    FILE* file = fopen(fileName, "rb");
+    if (file == NULL) {
+        printf("Error al abrir el archivo para lectura\n");
+        return;
+    }
+
+    char buffer[MAX_BUFFER_SIZE];
+    int bytesRead;
+    do {
+        bytesRead = fread(buffer, 1, sizeof(buffer), file);
+        if (bytesRead > 0) {
+            if (send(clientSocket, buffer, bytesRead, 0) < 0) {
+                printf("Error al enviar el archivo al cliente\n");
+                fclose(file);
+                return;
+            }
+        }
+    } while (bytesRead > 0);
 
     fclose(file);
 }
