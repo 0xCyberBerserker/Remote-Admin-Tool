@@ -8,6 +8,7 @@
 #define MAX_COMMAND_SIZE 1024
 #define MAX_RESPONSE_SIZE 4096
 #define MAX_FILE_NAME 256
+#define MAX_BUFFER_SIZE 4096
 
 void showHelp() {
     printf("Comandos disponibles:\n");
@@ -39,26 +40,6 @@ int receiveResponse(int socket, char* response) {
 
 
 
-int sendFile(int socket, const char* fileName) {
-    FILE* file = fopen(fileName, "rb");
-    if (file == NULL) {
-        printf("Error al abrir el archivo para lectura\n");
-        return -1;
-    }
-
-    char buffer[MAX_RESPONSE_SIZE];
-    int bytesRead;
-    while ((bytesRead = fread(buffer, 1, sizeof(buffer), file)) > 0) {
-        if (send(socket, buffer, bytesRead, 0) < 0) {
-            printf("Error al enviar el archivo\n");
-            fclose(file);
-            return -1;
-        }
-    }
-
-    fclose(file);
-    return 0;
-}
 
 int receiveFile(int socket, const char* fileName) {
     FILE* file = fopen(fileName, "wb");
@@ -67,11 +48,41 @@ int receiveFile(int socket, const char* fileName) {
         return -1;
     }
 
-    char buffer[MAX_RESPONSE_SIZE];
+    char buffer[MAX_BUFFER_SIZE];
     int bytesRead;
-    while ((bytesRead = recv(socket, buffer, sizeof(buffer), 0)) > 0) {
+    do {
+        bytesRead = recv(socket, buffer, sizeof(buffer), 0);
+        if (bytesRead < 0) {
+            printf("Error al recibir el archivo del servidor\n");
+            fclose(file);
+            return -1;
+        }
         fwrite(buffer, 1, bytesRead, file);
+    } while (bytesRead == sizeof(buffer));
+
+    fclose(file);
+    return 0;
+}
+
+int sendFile(int socket, const char* fileName) {
+    FILE* file = fopen(fileName, "rb");
+    if (file == NULL) {
+        printf("Error al abrir el archivo para lectura\n");
+        return -1;
     }
+
+    char buffer[MAX_BUFFER_SIZE];
+    int bytesRead;
+    do {
+        bytesRead = fread(buffer, 1, sizeof(buffer), file);
+        if (bytesRead > 0) {
+            if (send(socket, buffer, bytesRead, 0) < 0) {
+                printf("Error al enviar el archivo al servidor\n");
+                fclose(file);
+                return -1;
+            }
+        }
+    } while (bytesRead > 0);
 
     fclose(file);
     return 0;
