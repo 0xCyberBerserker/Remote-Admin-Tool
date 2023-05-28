@@ -78,6 +78,14 @@ void handleClientCommand(SOCKET clientSocket, const char* command) {
             }
             closedir(dir);
         }
+    } else if (strcmp(command, "pwd") == 0) {
+        char currentDir[MAX_COMMAND_SIZE];
+        if (_getcwd(currentDir, sizeof(currentDir)) != NULL) {
+            send(clientSocket, currentDir, strlen(currentDir), 0);
+        } else {
+            printf("Error al obtener el directorio actual\n");
+            send(clientSocket, "Error al obtener el directorio actual", strlen("Error al obtener el directorio actual"), 0);
+        }
     } else {
         // Comando desconocido
         strcpy(response, "Comando desconocido");

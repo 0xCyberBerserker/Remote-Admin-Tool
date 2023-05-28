@@ -29,13 +29,15 @@ int sendCommand(int socket, const char* command) {
 }
 
 int receiveResponse(int socket, char* response) {
-    memset(response, 0, MAX_RESPONSE_SIZE);
-    if (recv(socket, response, MAX_RESPONSE_SIZE, 0) < 0) {
+ memset(response, 0, MAX_RESPONSE_SIZE);
+    if (recv(socket, response, MAX_RESPONSE_SIZE - 1, 0) < 0) {
         printf("Error al recibir la respuesta\n");
         return -1;
     }
     return 0;
 }
+
+
 
 int sendFile(int socket, const char* fileName) {
     FILE* file = fopen(fileName, "rb");
@@ -129,7 +131,20 @@ int main(int argc, char* argv[]) {
             printf("Saliendo del cliente\n");
             break;
         }
+        else if (strcmp(command, "pwd") == 0) {
+            // Enviar el comando al servidor
+            if (sendCommand(clientSocket, command) != 0) {
+                continue;
+            }
 
+            // Recibir la respuesta del servidor
+            if (receiveResponse(clientSocket, response) != 0) {
+                continue;
+            }
+
+            // Mostrar la respuesta del servidor
+            printf("Directorio actual en el servidor: %s\n", response);
+        }
         // Enviar el comando al servidor
         if (sendCommand(clientSocket, command) != 0) {
             continue;
