@@ -64,25 +64,35 @@ int receiveFile(int socket, const char* fileName) {
     return 0;
 }
 
-int sendFile(int socket, const char* fileName) {
+int sendFile(SOCKET clientSocket, const char* fileName) {
     FILE* file = fopen(fileName, "rb");
     if (file == NULL) {
-        printf("Error al abrir el archivo para lectura\n");
+        printf("Error al abrir el archivo %s\n", fileName);
         return -1;
     }
 
+    // Obtener el tamaño del archivo
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    // Enviar el tamaño del archivo al cliente
+    if (send(clientSocket, (const char*)&fileSize, sizeof(fileSize), 0) == SOCKET_ERROR) {
+        printf("Error al enviar el tamaño del archivo al cliente\n");
+        fclose(file);
+        return -1;
+    }
+
+    // Enviar el contenido del archivo al cliente en bloques
     char buffer[MAX_BUFFER_SIZE];
-    int bytesRead;
-    do {
-        bytesRead = fread(buffer, 1, sizeof(buffer), file);
-        if (bytesRead > 0) {
-            if (send(socket, buffer, bytesRead, 0) < 0) {
-                printf("Error al enviar el archivo al servidor\n");
-                fclose(file);
-                return -1;
-            }
+    size_t bytesRead;
+    while ((bytesRead = fread(buffer, 1, sizeof(buffer), file)) > 0) {
+        if (send(clientSocket, buffer, bytesRead, 0) == SOCKET_ERROR) {
+            printf("Error al enviar el archivo al cliente\n");
+            fclose(file);
+            return -1;
         }
-    } while (bytesRead > 0);
+    }
 
     fclose(file);
     return 0;
