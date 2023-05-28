@@ -22,6 +22,8 @@ Usable commands:
 
 You need to compile the server on a Windows machine and need MinGW and GCC installed.
 
+Latest compiled version of Server.exe will always be on the repo.
+
 ```POWERSHELL
 gcc Server.c -o Server.exe -lws2_32
 ```
