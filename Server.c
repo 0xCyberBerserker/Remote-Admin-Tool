@@ -167,7 +167,7 @@ void receiveFile(SOCKET clientSocket, const char* fileName) {
 }
 
 void sendFile(SOCKET clientSocket, const char* fileName) {
-    FILE* file = fopen(fileName, "rb");
+    FILE* file = fopen(fileName, "r");
     if (file == NULL) {
         printf("Error al abrir el archivo para lectura\n");
         return;
