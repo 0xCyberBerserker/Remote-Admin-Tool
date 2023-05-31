@@ -122,7 +122,7 @@ int main() {
 
     struct sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1"); // Cambia la dirección IP al servidor
+    serverAddr.sin_addr.s_addr = inet_addr("192.168.1.46"); // Cambia la dirección IP al servidor
     serverAddr.sin_port = htons(12345); // Cambia el puerto si es necesario
 
     if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
