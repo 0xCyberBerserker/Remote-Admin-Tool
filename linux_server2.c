@@ -42,8 +42,12 @@ void handleCommand(int clientSocket, const char* command) {
     }
 
     // Enviar la respuesta al agente
-    if (send(clientSocket, response, strlen(response), 0) == -1) {
+    int bytesSent = send(clientSocket, response, strlen(response), 0);
+    if (bytesSent == -1) {
         perror("Error al enviar la respuesta al agente");
+        return;
+    } else if (bytesSent == 0) {
+        printf("El agente ha cerrado la conexión\n");
         return;
     }
 }
@@ -95,6 +99,12 @@ int main() {
 
         // Eliminar el salto de línea final
         command[strcspn(command, "\n")] = '\0';
+
+        // Verificar si el agente ha cerrado la conexión
+        if (strlen(command) == 0) {
+            printf("El agente ha cerrado la conexión\n");
+            break;
+        }
 
         // Enviar el comando al agente y manejar la respuesta
         handleCommand(clientSocket, command);
