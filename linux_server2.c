@@ -17,10 +17,10 @@ void handleCommand(int clientSocket, const char* command) {
         response[strcspn(response, "\n")] = '\0';
     }
     else if (strcmp(command, "pwd") == 0) {
-        strcpy(response, "pwd");
+        strcpy(response, "Get-Location");
     }
     else if (strcmp(command, "ls") == 0) {
-        strcpy(response, "ls");
+        strcpy(response, "Get-ChildItem");
     }
     else if (strncmp(command, "put", 3) == 0) {
         printf("Ingrese el nombre del archivo a enviar al agente: ");
