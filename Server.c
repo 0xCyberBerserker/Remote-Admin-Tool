@@ -167,28 +167,47 @@ void receiveFile(SOCKET clientSocket, const char* fileName) {
 }
 
 void sendFile(SOCKET clientSocket, const char* fileName) {
-    FILE* file = fopen(fileName, "r");
+    FILE* file = fopen(fileName, "rb");
     if (file == NULL) {
-        printf("Error al abrir el archivo para lectura\n");
+        printf("Error al abrir el archivo para lectura: %s\n", fileName);
         return;
     }
 
+    // Obtener el tamaño del archivo
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    // Enviar el tamaño del archivo al cliente
+    if (send(clientSocket, (const char*)&fileSize, sizeof(fileSize), 0) == SOCKET_ERROR) {
+        printf("Error al enviar el tamaño del archivo al cliente\n");
+        fclose(file);
+        return;
+    }
+
+    // Enviar los datos del archivo al cliente en bloques
     char buffer[MAX_BUFFER_SIZE];
-    int bytesRead;
-    do {
+    long bytesSent = 0;
+    size_t bytesRead;
+    while (bytesSent < fileSize) {
         bytesRead = fread(buffer, 1, sizeof(buffer), file);
-        if (bytesRead > 0) {
-            if (send(clientSocket, buffer, bytesRead, 0) < 0) {
-                printf("Error al enviar el archivo al cliente\n");
-                fclose(file);
-                return;
-            }
+        if (bytesRead <= 0) {
+            printf("Error al leer el archivo\n");
+            fclose(file);
+            return;
         }
-    } while (bytesRead > 0);
+
+        if (send(clientSocket, buffer, bytesRead, 0) == SOCKET_ERROR) {
+            printf("Error al enviar datos al cliente\n");
+            fclose(file);
+            return;
+        }
+
+        bytesSent += bytesRead;
+    }
 
     fclose(file);
 }
-
 void executePowerShellCommand(SOCKET clientSocket, const char* command) {
     // Código para ejecutar el comando de PowerShell y enviar la salida al cliente
     
