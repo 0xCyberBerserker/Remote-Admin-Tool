@@ -21,37 +21,34 @@ void showHelp() {
     printf("    exit                     - Salir del cliente\n");
 }
 
-int sendCommand(int socket, const char* command) {
-    if (send(socket, command, strlen(command), 0) < 0) {
-        printf("Error al enviar el comando\n");
+int sendResponse(int socket, const char* response) {
+    if (send(socket, response, strlen(response), 0) < 0) {
+        printf("Error al enviar la respuesta\n");
         return -1;
     }
     return 0;
 }
 
-int receiveResponse(int socket, char* response) {
- memset(response, 0, MAX_RESPONSE_SIZE);
-    if (recv(socket, response, MAX_RESPONSE_SIZE - 1, 0) < 0) {
-        printf("Error al recibir la respuesta\n");
+int receiveCommand(int socket, char* command) {
+    memset(command, 0, MAX_COMMAND_SIZE);
+    if (recv(socket, command, MAX_COMMAND_SIZE - 1, 0) < 0) {
+        printf("Error al recibir el comando\n");
         return -1;
     }
     return 0;
 }
 
-
-
-
-int receiveFile(SOCKET serverSocket, const char* fileName) {
+int receiveFile(int clientSocket, const char* fileName) {
     FILE* file = fopen(fileName, "wb");
     if (file == NULL) {
         printf("Error al crear el archivo %s\n", fileName);
         return -1;
     }
 
-    // Recibir el tamaño del archivo del servidor
+    // Recibir el tamaño del archivo del cliente
     long fileSize;
-    if (recv(serverSocket, (char*)&fileSize, sizeof(fileSize), 0) == SOCKET_ERROR) {
-        printf("Error al recibir el tamaño del archivo del servidor\n");
+    if (recv(clientSocket, (char*)&fileSize, sizeof(fileSize), 0) < 0) {
+        printf("Error al recibir el tamaño del archivo del cliente\n");
         fclose(file);
         return -1;
     }
@@ -63,9 +60,9 @@ int receiveFile(SOCKET serverSocket, const char* fileName) {
     while (bytesReceived < fileSize) {
         int remainingBytes = fileSize - bytesReceived;
         int bytesToReceive = (remainingBytes > MAX_BUFFER_SIZE) ? MAX_BUFFER_SIZE : remainingBytes;
-        bytesRead = recv(serverSocket, buffer, bytesToReceive, 0);
+        bytesRead = recv(clientSocket, buffer, bytesToReceive, 0);
         if (bytesRead <= 0) {
-            printf("Error al recibir datos del servidor\n");
+            printf("Error al recibir datos del cliente\n");
             fclose(file);
             return -1;
         }
@@ -77,7 +74,7 @@ int receiveFile(SOCKET serverSocket, const char* fileName) {
     return 0;
 }
 
-int sendFile(SOCKET clientSocket, const char* fileName) {
+int sendFile(int clientSocket, const char* fileName) {
     FILE* file = fopen(fileName, "rb");
     if (file == NULL) {
         printf("Error al abrir el archivo %s\n", fileName);
@@ -90,7 +87,7 @@ int sendFile(SOCKET clientSocket, const char* fileName) {
     fseek(file, 0, SEEK_SET);
 
     // Enviar el tamaño del archivo al cliente
-    if (send(clientSocket, (const char*)&fileSize, sizeof(fileSize), 0) == SOCKET_ERROR) {
+    if (send(clientSocket, (const char*)&fileSize, sizeof(fileSize), 0) < 0) {
         printf("Error al enviar el tamaño del archivo al cliente\n");
         fclose(file);
         return -1;
@@ -100,7 +97,7 @@ int sendFile(SOCKET clientSocket, const char* fileName) {
     char buffer[MAX_BUFFER_SIZE];
     size_t bytesRead;
     while ((bytesRead = fread(buffer, 1, sizeof(buffer), file)) > 0) {
-        if (send(clientSocket, buffer, bytesRead, 0) == SOCKET_ERROR) {
+        if (send(clientSocket, buffer, bytesRead, 0) < 0) {
             printf("Error al enviar el archivo al cliente\n");
             fclose(file);
             return -1;
@@ -111,111 +108,124 @@ int sendFile(SOCKET clientSocket, const char* fileName) {
     return 0;
 }
 
-int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        printf("Uso: %s <ip_servidor>\n", argv[0]);
-        return 1;
-    }
+int main() {
+    int serverSocket, clientSocket;
+    struct sockaddr_in serverAddr, clientAddr;
+    socklen_t clientAddrLen = sizeof(clientAddr);
 
-    char* serverIP = argv[1];
-    int serverPort = 12345;
+    int agentPort = 12345;
 
-    int clientSocket;
-    struct sockaddr_in serverAddr;
-
-    // Crear socket del cliente
-    if ((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("Error al crear el socket del cliente\n");
+    // Crear socket del servidor
+    if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        printf("Error al crear el socket del servidor\n");
         return 1;
     }
 
     // Configurar la estructura de la dirección del servidor
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(serverPort);
+    serverAddr.sin_port = htons(agentPort);
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
 
-    if (inet_pton(AF_INET, serverIP, &(serverAddr.sin_addr)) <= 0) {
-        printf("Dirección IP inválida\n");
+    // Vincular el socket del servidor a la dirección y puerto especificados
+    if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+        printf("Error al vincular el socket del servidor\n");
         return 1;
     }
 
-    // Conectar al servidor
-    if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-        printf("Error al conectar al servidor\n");
+    // Escuchar conexiones entrantes
+    if (listen(serverSocket, 1) < 0) {
+        printf("Error al escuchar conexiones entrantes\n");
         return 1;
     }
 
-    char command[MAX_COMMAND_SIZE];
-    char response[MAX_RESPONSE_SIZE];
-
-    printf("Cliente conectado al servidor\n");
-    showHelp();
+    printf("Servidor esperando conexiones en el puerto %d/TCP\n", agentPort);
 
     while (1) {
-        printf("Ingrese un comando: ");
-        fgets(command, sizeof(command), stdin);
-
-        // Eliminar el salto de línea final
-        command[strcspn(command, "\n")] = 0;
-
-        // Comprobar el comando ingresado
-        if (strcmp(command, "--help") == 0) {
-            showHelp();
-            continue;
-        } else if (strcmp(command, "exit") == 0) {
-            printf("Saliendo del cliente\n");
-            break;
-        }
-        else if (strcmp(command, "pwd") == 0) {
-            // Enviar el comando al servidor
-            if (sendCommand(clientSocket, command) != 0) {
-                continue;
-            }
-
-            // Recibir la respuesta del servidor
-            if (receiveResponse(clientSocket, response) != 0) {
-                continue;
-            }
-
-            // Mostrar la respuesta del servidor
-            printf("Directorio actual en el servidor: %s\n", response);
-        }
-        // Enviar el comando al servidor
-        if (sendCommand(clientSocket, command) != 0) {
+        // Aceptar la conexión entrante
+        if ((clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen)) < 0) {
+            printf("Error al aceptar la conexión entrante\n");
             continue;
         }
 
-        // Recibir la respuesta del servidor
-        if (receiveResponse(clientSocket, response) != 0) {
-            continue;
+        printf("Cliente conectado desde %s:%d\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+
+        char command[MAX_COMMAND_SIZE];
+        char response[MAX_RESPONSE_SIZE];
+
+        showHelp();
+
+        while (1) {
+            // Recibir el comando del cliente
+            if (receiveCommand(clientSocket, command) != 0) {
+                break;
+            }
+
+            // Comprobar el comando recibido
+            if (strcmp(command, "exit") == 0) {
+                printf("Cliente desconectado desde %s:%d\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+                break;
+            }
+            else if (strcmp(command, "pwd") == 0) {
+                // Obtener el directorio actual del servidor
+                char currentDir[MAX_RESPONSE_SIZE];
+                if (getcwd(currentDir, sizeof(currentDir)) == NULL) {
+                    printf("Error al obtener el directorio actual del servidor\n");
+                    break;
+                }
+
+                // Enviar la respuesta al cliente
+                if (sendResponse(clientSocket, currentDir) != 0) {
+                    break;
+                }
+            }
+            else if (strncmp(command, "get ", 4) == 0) {
+                // Obtener el nombre del archivo remoto
+                char fileName[MAX_FILE_NAME];
+                sscanf(command, "get %s", fileName);
+
+                // Enviar la confirmación al cliente
+                if (sendResponse(clientSocket, "READY_FOR_DOWNLOAD") != 0) {
+                    break;
+                }
+
+                // Recibir el archivo del cliente
+                if (receiveFile(clientSocket, fileName) == -1) {
+                    printf("Error al recibir el archivo del cliente\n");
+                } else {
+                    printf("Archivo recibido exitosamente: %s\n", fileName);
+                }
+            }
+            else if (strncmp(command, "put ", 4) == 0) {
+                // Obtener el nombre del archivo local
+                char fileName[MAX_FILE_NAME];
+                sscanf(command, "put %s", fileName);
+
+                // Enviar la confirmación al cliente
+                if (sendResponse(clientSocket, "READY_FOR_UPLOAD") != 0) {
+                    break;
+                }
+
+                // Enviar el archivo al cliente
+                if (sendFile(clientSocket, fileName) == -1) {
+                    printf("Error al enviar el archivo al cliente\n");
+                } else {
+                    printf("Archivo enviado exitosamente: %s\n", fileName);
+                }
+            }
+            else {
+                // Comando no reconocido, enviar respuesta genérica
+                if (sendResponse(clientSocket, "Comando no reconocido") != 0) {
+                    break;
+                }
+            }
         }
 
-        // Interpretar la respuesta del servidor
-        if (strcmp(response, "READY_FOR_UPLOAD") == 0) {
-            // Enviar el archivo al servidor
-            char fileName[MAX_FILE_NAME];
-            sscanf(command, "put %s", fileName);
-            if (sendFile(clientSocket, fileName) == -1) {
-                printf("Error al enviar el archivo al servidor\n");
-            } else {
-                printf("Archivo enviado exitosamente\n");
-            }
-        } else if (strcmp(response, "READY_FOR_DOWNLOAD") == 0) {
-            // Recibir el archivo del servidor
-            char fileName[MAX_FILE_NAME];
-            sscanf(command, "get %s", fileName);
-            if (receiveFile(clientSocket, fileName) == -1) {
-                printf("Error al recibir el archivo del servidor\n");
-            } else {
-                printf("Archivo recibido exitosamente\n");
-            }
-        } else {
-            // Mostrar la respuesta del servidor
-            printf("Respuesta del servidor: %s\n", response);
-        }
+        // Cerrar el socket del cliente
+        close(clientSocket);
     }
 
-    // Cerrar socket del cliente
-    close(clientSocket);
+    // Cerrar el socket del servidor
+    close(serverSocket);
 
     return 0;
 }
