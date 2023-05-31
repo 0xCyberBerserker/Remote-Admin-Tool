@@ -1,5 +1,5 @@
-This software is intended to be a Remote Administration Tool developed in C for a Windows Server and a Linux Client.
-It is intended to have some personalized commands and execute commands on powershell by the argument personalized command exec and then the powershell command you want to execute.
+This software is intended to be a Remote Administration Tool developed in C for a Windows Agent and a Linux Server.
+It is intended to have some personalized commands and execute commands on powershell by the argument personalized command exec and then the powershell command you want to execute on the agent.
 
 Usable commands:
 
@@ -20,22 +20,22 @@ Usable commands:
 
 **Compilation:**
 
-You need to compile the server on a Windows machine and need MinGW and GCC installed.
+You need to compile the agent on a Windows machine and need MinGW and GCC installed.
 
-Latest compiled version of Server.exe will always be on the repo.
+Latest compiled version of agent1.exe will always be on the repo.
 
 ```POWERSHELL
-gcc Server.c -o Server.exe -lws2_32
+gcc agent1.c -o agent1.exe -lws2_32
 ```
 
 and to compile the client on linux just 
 
 ```BASH
-gcc linux_client.c -o client
+gcc linux_server.c -o server
 ```
 
 and to run 
 
 ```BASH
-./client <server_IP>
+./server <agent_IP>
 ```
