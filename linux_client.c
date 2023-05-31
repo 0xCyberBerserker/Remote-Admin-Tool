@@ -41,24 +41,37 @@ int receiveResponse(int socket, char* response) {
 
 
 
-int receiveFile(int socket, const char* fileName) {
+int receiveFile(SOCKET serverSocket, const char* fileName) {
     FILE* file = fopen(fileName, "wb");
     if (file == NULL) {
-        printf("Error al abrir el archivo para escritura\n");
+        printf("Error al crear el archivo %s\n", fileName);
         return -1;
     }
 
+    // Recibir el tamaño del archivo del servidor
+    long fileSize;
+    if (recv(serverSocket, (char*)&fileSize, sizeof(fileSize), 0) == SOCKET_ERROR) {
+        printf("Error al recibir el tamaño del archivo del servidor\n");
+        fclose(file);
+        return -1;
+    }
+
+    // Recibir y escribir los datos del archivo en bloques
     char buffer[MAX_BUFFER_SIZE];
-    int bytesRead;
-    do {
-        bytesRead = recv(socket, buffer, sizeof(buffer), 0);
-        if (bytesRead < 0) {
-            printf("Error al recibir el archivo del servidor\n");
+    long bytesReceived = 0;
+    size_t bytesRead;
+    while (bytesReceived < fileSize) {
+        int remainingBytes = fileSize - bytesReceived;
+        int bytesToReceive = (remainingBytes > MAX_BUFFER_SIZE) ? MAX_BUFFER_SIZE : remainingBytes;
+        bytesRead = recv(serverSocket, buffer, bytesToReceive, 0);
+        if (bytesRead <= 0) {
+            printf("Error al recibir datos del servidor\n");
             fclose(file);
             return -1;
         }
         fwrite(buffer, 1, bytesRead, file);
-    } while (bytesRead == sizeof(buffer));
+        bytesReceived += bytesRead;
+    }
 
     fclose(file);
     return 0;
