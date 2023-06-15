@@ -40,10 +40,12 @@ and to run
 ./server <agent_IP>
 ```
 
-Working Images:
+Working Tests:
+
+![https://github.com/JohnMorgan1234/Remote-Admin-Tool/blob/main/bichito/GIFs/agent2_test.gif](https://github.com/JohnMorgan1234/Remote-Admin-Tool/blob/main/bichito/GIFs/agent2_test.gif)
 
 ![https://github.com/JohnMorgan1234/Remote-Admin-Tool/blob/main/bichito/GIFs/Bishito2.gif](https://github.com/JohnMorgan1234/Remote-Admin-Tool/blob/main/bichito/GIFs/Bishito2.gif)
 
-![https://github.com/JohnMorgan1234/Remote-Admin-Tool/blob/main/bichito/GIFs/agent2_test.gif](https://github.com/JohnMorgan1234/Remote-Admin-Tool/blob/main/bichito/GIFs/agent2_test.gif)]()
+
 
 
