@@ -5,7 +5,7 @@ Usable commands:
 
     cd directory             
 
-    pwd                         - Shows the full path of the directory we are in
+    pwd                         - Shows the full path of the current directory
 
     ls                          - Just like a Dir or an ls on a Linux Machine
 
@@ -13,7 +13,9 @@ Usable commands:
 
     get remote_file             - Download a file from the server
 
-    exec Powershell_Command     - Execute a powershell command on the server
+    key                         - Runs a keylogger
+
+    per                         - Enables persistence
 
     exit                        - Exits the client
 
