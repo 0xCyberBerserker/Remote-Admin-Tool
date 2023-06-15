@@ -39,3 +39,9 @@ and to run
 ```BASH
 ./server <agent_IP>
 ```
+
+Working Images:
+
+![./bichito/agent2_test.gif]()
+
+![./bichito/Bishito2.gif]()
