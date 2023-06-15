@@ -1,4 +1,4 @@
-This software is intended to be a Remote Administration Tool developed in C for a Windows Agent and a Linux Server.
+This software is intended to be a Remote Administration Tool developed in C for a Windows Agent and a Linux Server. (Work In Progress)
 It is intended to have some personalized commands and execute commands on powershell by the argument personalized command exec and then the powershell command you want to execute on the agent.
 
 Usable commands:
