@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "string.h": "c"
+        "string.h": "c",
+        "direct.h": "c",
+        "stdio.h": "c",
+        "winsock2.h": "c"
     }
 }

