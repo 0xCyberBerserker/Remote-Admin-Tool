@@ -76,19 +76,27 @@ int main() {
         if (strcmp("kl", buffer) == 0 ) {
             goto jump;
         }
-        else if (strncmp("per", buffer, 3) == 0 ) {
+        else if (strncmp("per", buffer) == 0 ) {
             recv(client_socket,response,sizeof(response),0);
         }
-        else if (strncmp("sys", buffer, 3) == 0 ) {
+        else if (strncmp("sys", buffer) == 0 ) {
             recv(client_socket,response,sizeof(response),0);
         }
-        else if (strncmp("pwd", buffer, 3) == 0 ) {
+        else if (strncmp("pwd", buffer) == 0 ) {
             recv(client_socket,response,sizeof(response),0);
         }
-        else if (strncmp("ls", buffer, 2) == 0 ) {
+        else if (strncmp("ls", buffer) == 0 ) {
             recv(client_socket,response,sizeof(response),0);
         }
-        else if (strncmp("help", buffer, 4) == 0 ) {
+        else if (strncmp("put", buffer) == 0 ) {
+            //recv(client_socket,response,sizeof(response),0);
+            printf("Not implemented yet");
+        }
+        else if (strncmp("get", buffer) == 0 ) {
+            //recv(client_socket,response,sizeof(response),0);
+            printf("Not implemented yet");
+        }
+        else if (strncmp("help", buffer) == 0 ) {
             recv(client_socket,response,sizeof(response),0);
         }
         else {

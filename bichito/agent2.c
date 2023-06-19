@@ -206,8 +206,13 @@ void Shell() {
         } else if (strncmp("pwd", buffer, 3) == 0) {
             send_cwd();
         } else if (strncmp("ls", buffer, 2) == 0) {
-            // ls
-        } else if (strncmp("sys", buffer, 3) == 0) {
+            // ls   
+        } else if (strncmp("put", buffer, 2) == 0) {
+            // put
+        } else if (strncmp("get", buffer, 2) == 0) {
+            // get
+        }
+        else if (strncmp("sys", buffer, 3) == 0) {
             get_system_info();
         } else if (strncmp("cd ", buffer, 3) == 0) {
             chdir(str_cut(buffer, 3, MAX_BUFFER_SIZE));
