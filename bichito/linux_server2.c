@@ -56,6 +56,7 @@ int main() {
             printf("Cliente desconectado desde %s:%d\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
             break;
         }
+        /*
         else if (strcmp(buffer, "pwd") == 0) {
             // Obtener el directorio actual del servidor
             char currentDir[MAX_RESPONSE_SIZE];
@@ -70,34 +71,42 @@ int main() {
                 }
             }
         }
+        */
 
-        else if (strncmp("kl", buffer, 2) == 0 ) {
+        if (strcmp("kl", buffer) == 0 ) {
             goto jump;
         }
         else if (strncmp("per", buffer, 3) == 0 ) {
             recv(client_socket,response,sizeof(response),0);
-            printf("%s", response);
         }
         else if (strncmp("sys", buffer, 3) == 0 ) {
             recv(client_socket,response,sizeof(response),0);
-            printf("%s", response);
         }
         else if (strncmp("pwd", buffer, 3) == 0 ) {
             recv(client_socket,response,sizeof(response),0);
-            printf("%s", response);
         }
         else if (strncmp("ls", buffer, 2) == 0 ) {
             recv(client_socket,response,sizeof(response),0);
-            printf("%s", response);
         }
         else if (strncmp("help", buffer, 4) == 0 ) {
             recv(client_socket,response,sizeof(response),0);
-            printf("%s", response);
         }
         else {
             recv(client_socket, response, sizeof(response), MSG_WAITALL);
-            printf("%s", response);
+        }
+
+        if(strlen(response) > 1)
+        {
+            printf("%s\n", response);
+            fflush(stdout);
         }
     }
 
 }
+
+
+// do 
+// while(respuest = recv)
+// {
+
+// }

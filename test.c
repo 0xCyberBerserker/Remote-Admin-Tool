@@ -13,10 +13,11 @@ int main(){
       perror( "_getcwd error" );
    else
    {
-      //printf( "%s \nLength: %zu\n", buffer, strlen(buffer) );
+      
       fwrite(buffer, strlen(buffer), strlen(buffer), fd);
       free(buffer);
       fclose(fd);
+      //printf( "%s \nLength: %zu\n", buffer, strlen(buffer) );
    }
 
     return 0;
